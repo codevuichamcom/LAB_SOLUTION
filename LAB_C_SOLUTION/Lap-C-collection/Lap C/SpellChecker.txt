@@ -1,0 +1,201 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<ctype.h>
+char* Validate(char* strInPut){
+	char* strOutPut=(char*)malloc(30*sizeof(char));
+	int i=0;
+	for(i=0;i<strlen(strInPut);i++){
+		if(strInPut[i]>='A' && strInPut[i] <= 'Z'){
+			strInPut[i] = tolower(strInPut[i]);
+		}
+		if (strInPut[i]< 'a' || strInPut[i]>'z'){
+			strcpy(&strInPut[i],&strInPut[i+1]);
+			i--;
+		}
+	}
+	strcpy(strOutPut,strInPut);
+	return strOutPut;
+}
+
+int subString(char* shortStr, char* longStr){
+	char *p;
+	p = strstr(longStr,shortStr);
+	if (p ==NULL){
+		return 0;
+	}
+	return 1;
+}
+
+int Subsequence(char* shortStr, char* longStr){
+	int i=0,j=0;
+	int count=0;
+	while (i< strlen(shortStr)){
+		while (j<strlen(longStr)){
+			if(longStr[j] == shortStr[i]){
+				count++;
+				break;
+			}
+			j++;
+		}
+		i++;
+	}
+	if(count !=strlen(shortStr)){
+		return 0;
+	}
+	return 1;
+}
+
+int Permutation(char* string1, char* string2){
+	char str1[30],str2[30];
+	strcpy(str1,string1);
+	strcpy(str2,string2);
+	int i=0, j=0;
+	while (i < strlen(str1)){
+		j=0;
+		while (j< strlen(str2)){
+			if(str1[i] == str2[j]){
+				strcpy(&str2[j], &str2[j+1]);
+				break;
+			}
+			j++;
+		}
+		i++;
+	}
+	
+	
+	if(strcmp(str2,"")==0){
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+int matchScore(char* str1, char* str2){
+	int i=0;
+	int count =0;
+	while ( i< strlen(str1)){
+		if (str1[i] != str2[i]){
+			count++;
+		}
+		i++;
+	}
+	return count;
+}
+
+void checkWord(char** note, int numberOfWords){
+	char* strInPut = (char*) malloc (30*sizeof(char));
+	printf("Please enter a word you would like to check: \n");
+	fflush(stdin);
+	gets(strInPut);
+	strcpy(strInPut,Validate(strInPut));
+	int i=0,j=0;
+	while (i< numberOfWords -1){
+		if (strcmp(strInPut, note[i]) == 0){
+			printf("Great, %s is in the dict.\n",strInPut);
+			return;
+		}
+		i++;
+	}
+	printf("Here are the possible words you could have meant.\n");
+	
+	while(j<numberOfWords - 1){
+		int check=1;
+		if(strlen(strInPut) == strlen(note[j])){
+			if(Permutation(strInPut,note[j]) == 1){
+				printf("Permutation - %s \n",note[j]);
+				check =0;
+				j++;
+			}
+		}
+		if (strlen(strInPut) ==  strlen(note[j])){
+			if (matchScore(strInPut,note[j]) < 3){
+				printf("Matchscore - %s\n",note[j]);
+				check = 0;
+				j++;
+			}
+		}
+		if(strlen(strInPut) < strlen(note[j]) && strlen(note[j]) - strlen(strInPut) < 3){
+			if (subString(strInPut,note[j])==1){
+				printf("substring - %s \n", note[j]);
+				check =0;
+				j++;
+			}
+		}
+		if(strlen(strInPut) < strlen(note[j]) && strlen(note[j]) - strlen(strInPut) < 3){
+			if (Subsequence(strInPut,note[j])==1){
+			printf("subsequence - %s\n",note[j]);
+			check = 0;
+			j++;
+			}
+		}
+		if(check==1){
+			j++;
+		}
+		if (check==0) break;
+	}	
+}
+
+int main(){
+	FILE *fp =fopen("dictionary.txt","r");
+	int i = 0, j=0;
+	char** note;
+	char ch;
+	if(fp == NULL){
+		printf(" Can't read the dict.txt file");
+	} else {
+	
+		while (!feof(fp)){
+			j=0;
+			if(i==0){
+				note = (char**)malloc(sizeof(char*));
+			} else{
+				note = (char**)realloc(note, (i+1)*sizeof(char*));
+			}
+			while(1){
+				if (j==0){
+					note[i] = (char*)malloc(sizeof(char));
+				} else {
+					note[i] = (char*)realloc(note[i],(j+1)*sizeof(char));
+				}
+				fscanf(fp,"%c",&ch);
+				if(ch != '\n'){
+					note[i][j] =ch;
+				}else {
+					note[i][j]='\0';
+					break;
+				}
+				j++;
+			}
+			i++;
+		}
+	}
+	fclose(fp);
+	
+	int numberOfWords =i;
+	printf("Welcome to the Spell Checker!\n"
+			"The dict has been loaded\n");
+	int check=1;
+	while(check == 1){
+		checkWord(note, numberOfWords);
+		check=0;
+		if(check == 0){
+			char conti[20];
+			printf(" Would you like to check another word?(yes/no)\n");
+			fflush(stdin);
+			gets(conti);
+			Validate(conti);
+			while(strcmp(conti,"yes") !=0 && strcmp(conti,"no") !=0){
+				printf(" Would you like to check another word?(yes/no)\n");
+				fflush(stdin);
+				gets(conti);
+				Validate(conti);
+			}
+			if(strcmp(conti,"yes") == 0){
+				check =1;
+			} else {
+				check = 0;
+			}
+		}
+	}
+}
